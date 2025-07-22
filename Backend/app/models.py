@@ -32,3 +32,17 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.user.full_name}: {self.transaction_type} ₹{self.amount} - {self.source}"
+
+#monthly reports of the financial analysis
+class FinancialReport(models.Model):
+    user = models.ForeignKey(BasicInfo, on_delete=models.CASCADE)
+    month = models.IntegerField()
+    year = models.IntegerField()
+    report_data = models.JSONField()
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'month', 'year')
+
+    def __str__(self):
+        return f"Report for {self.user.email} - {self.month}/{self.year}"
