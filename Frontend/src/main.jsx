@@ -7,8 +7,7 @@ import Home from "./components/Home.jsx";
 import Analysis from "./components/Analysis.jsx";
 import Contact from "./components/Contact.jsx";
 import Login from "./components/Login.jsx";
-import Email from "./components/register/Email.jsx";
-import BasicInformation from "./components/register/BasicInformation.jsx";
+import Register from "./components/Register.jsx";
 import Account from "./components/Account.jsx";
 
 const Layout = () => {
@@ -43,17 +42,13 @@ const router = createBrowserRouter([
         element: <Login />,
       },
       {
-        path: "/register",
-        element: <Email />,
+        path: "/account",
+        element: <Account />,
       },
-      {
-        path: "/basic-information",
-        element: <BasicInformation />,
+      { 
+        path: "/register", 
+        element: <Register/>
       },
-      {
-        path:"/account",
-        element:<Account/>,
-      }
     ],
   },
 ]);

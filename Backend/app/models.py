@@ -3,20 +3,23 @@ from django.utils import timezone
 
 # User Profile Model
 class BasicInfo(models.Model):
+    # This will be the unique ID provided by Firebase Authentication
+    # --- FIX: Added null=True and blank=True to allow existing rows to be migrated ---
+    firebase_uid = models.CharField(max_length=128, unique=True, null=True, blank=True)
     full_name = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100, unique=True)
-    gender = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
     occupation = models.CharField(max_length=100)
-    salary = models.PositiveIntegerField()
-    marital_status = models.CharField(max_length=50, default='single')
-    password = models.CharField(max_length=100, default='Temp@1234')
-    created_at = models.DateTimeField(auto_now_add=True)
+    salary = models.IntegerField()
+    marital_status = models.CharField(max_length=20)
+    gender = models.CharField(max_length=10)
+    # The password field is now removed
+    
+    last_email_sync = models.DateTimeField(null=True, blank=True)
     google_access_token = models.TextField(null=True, blank=True)
     google_refresh_token = models.TextField(null=True, blank=True)
-    last_email_sync = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return self.full_name
+        return self.email
 
 
 # Transaction Model

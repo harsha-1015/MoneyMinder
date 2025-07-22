@@ -13,4 +13,5 @@ urlpatterns = [
     path('read-emails/', views.read_gmail_emails, name='read_emails'),
     path('api/manual-sync/',views.manual_sync_view,name='manual-email-sync'),
     path('api/get-analysis/', views.get_financial_analysis, name='get-analysis'),
+    path('api/create-profile/', views.create_profile, name='create-profile'),
 ]

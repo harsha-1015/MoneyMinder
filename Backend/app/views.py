@@ -116,6 +116,27 @@ def send_LoginVerfication(request):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
+
+@csrf_exempt
+def create_profile(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            # Create a new user profile linked to the Firebase UID
+            BasicInfo.objects.create(
+                firebase_uid=data.get('firebase_uid'),
+                full_name=data.get('full_name'),
+                email=data.get('email'),
+                occupation=data.get('occupation'),
+                salary=data.get('salary'),
+                marital_status=data.get('marital_status'),
+                gender=data.get('gender'),
+            )
+            return JsonResponse({"status": "success", "message": "Profile created successfully."})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    return JsonResponse({"error": "Only POST requests are allowed."}, status=405)
+
 @csrf_exempt
 def get_basicInfo(request):
     if request.method == 'POST':
