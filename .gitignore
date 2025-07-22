@@ -1,0 +1,20 @@
+# Python
+menv/
+__pycache__/
+*.py[cod]
+*.pyo
+db.sqlite3
+*.log
+
+# React / Node
+frontend/node_modules/
+frontend/build/
+
+# Environment Variables
+.env
+*.env
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
