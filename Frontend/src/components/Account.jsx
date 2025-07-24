@@ -7,36 +7,40 @@ function Account() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
 
-  // --- ADDED FOR SYNC BUTTON ---
+  
   const [syncMessage, setSyncMessage] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
-  // -----------------------------
+  
 
   useEffect(() => {
-    const email = localStorage.getItem("email");
-    const login = localStorage.getItem("Login");
+  const email = localStorage.getItem("email");
+  const login = localStorage.getItem("Login");
 
-    if (login !== "success" || !email) {
-      navigate("/login");
-      return;
+  // Avoid infinite navigation loop
+  if (!email || login !== "success") {
+    // Only navigate if already not on login page
+    if (window.location.pathname !== "/login") {
+      navigate("/login", { replace: true });
     }
+    return;
+  }
 
-    const fetchUserDetails = async () => {
-      try {
-        const res = await fetch(
-          `http://127.0.0.1:8000/app/api/get-user-details?email=${encodeURIComponent(email)}`
-        );
-        const data = await res.json();
+  const fetchUserDetails = async () => {
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:8000/app/api/get-user-details?email=${encodeURIComponent(email)}`
+      );
+      const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || "Fetch failed");
-        setUser(data);
-      } catch (err) {
-        setError(err.message);
-      }
-    };
+      if (!res.ok) throw new Error(data.error || "Fetch failed");
+      setUser(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
-    fetchUserDetails();
-  }, [navigate]);
+  fetchUserDetails();
+}, [navigate]);
 
   /* Logout handler */
   const handleLogout = () => {
@@ -53,23 +57,25 @@ function Account() {
     const email = localStorage.getItem("email");
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/app/api/manual-sync/', {
-          method: 'POST',
+      const response = await fetch(
+        "http://127.0.0.1:8000/app/api/manual-sync/",
+        {
+          method: "POST",
           headers: {
-              'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           // Send email in the body so the backend knows which user to sync
-          body: JSON.stringify({ email: email }) 
-      });
+          body: JSON.stringify({ email: email }),
+        }
+      );
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || "Sync failed. Please try again.");
       }
-      
-      setSyncMessage(data.message);
 
+      setSyncMessage(data.message);
     } catch (err) {
       setSyncMessage(err.message);
     } finally {
@@ -96,15 +102,29 @@ function Account() {
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 rounded-2xl shadow-lg bg-white">
-      <h2 className="text-2xl font-semibold mb-4 text-center">Account Details</h2>
+      <h2 className="text-2xl font-semibold mb-4 text-center">
+        Account Details
+      </h2>
 
       <div className="space-y-2">
-        <p><strong>Full Name:</strong> {user.full_name}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Gender:</strong> {user.gender}</p>
-        <p><strong>Occupation:</strong> {user.occupation}</p>
-        <p><strong>Salary:</strong> ₹{user.salary}</p>
-        <p><strong>Marital Status:</strong> {user.marital_status}</p>
+        <p>
+          <strong>Full Name:</strong> {user.full_name}
+        </p>
+        <p>
+          <strong>Email:</strong> {user.email}
+        </p>
+        <p>
+          <strong>Gender:</strong> {user.gender}
+        </p>
+        <p>
+          <strong>Occupation:</strong> {user.occupation}
+        </p>
+        <p>
+          <strong>Salary:</strong> ₹{user.salary}
+        </p>
+        <p>
+          <strong>Marital Status:</strong> {user.marital_status}
+        </p>
       </div>
 
       {/* --- ADDED SYNC BUTTON AND MESSAGE SECTION --- */}
@@ -117,7 +137,9 @@ function Account() {
           {isSyncing ? "Syncing..." : "Sync Emails Now"}
         </button>
         {syncMessage && (
-          <p className="mt-4 text-center text-sm text-gray-700">{syncMessage}</p>
+          <p className="mt-4 text-center text-sm text-gray-700">
+            {syncMessage}
+          </p>
         )}
       </div>
       {/* ------------------------------------------- */}

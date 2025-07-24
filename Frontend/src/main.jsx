@@ -1,4 +1,6 @@
 import { createRoot } from "react-dom/client";
+import { StrictMode } from "react";
+import { AuthContextProvider } from "./context/AuthContext.jsx";
 import "./index.css";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import Header from "./components/Header.jsx";
@@ -25,34 +27,20 @@ const router = createBrowserRouter([
     path: "/",
     element: <Layout />,
     children: [
-      {
-        path: "/",
-        element: <Home />,
-      },
-      {
-        path: "/analysis",
-        element: <Analysis />,
-      },
-      {
-        path: "/contact",
-        element: <Contact />,
-      },
-      {
-        path: "/login",
-        element: <Login />,
-      },
-      {
-        path: "/account",
-        element: <Account />,
-      },
-      { 
-        path: "/register", 
-        element: <Register/>
-      },
+      { path: "/", element: <Home /> },
+      { path: "/analysis", element: <Analysis /> },
+      { path: "/contact", element: <Contact /> },
+      { path: "/login", element: <Login /> },
+      { path: "/account", element: <Account /> },
+      { path: "/register", element: <Register /> },
     ],
   },
 ]);
 
 createRoot(document.getElementById("root")).render(
-  <RouterProvider router={router} />
+  <StrictMode>
+    <AuthContextProvider> 
+      <RouterProvider router={router} />
+    </AuthContextProvider>
+  </StrictMode>
 );

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase'; // Import from your firebase.js
+import { auth } from '../firebase';
+import { AuthContext } from '../context/AuthContext'; // Import from the new file
 
 const Login = () => {
     const navigate = useNavigate();
@@ -10,27 +11,30 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const { currentUser } = useContext(AuthContext);
+
+    useEffect(() => {
+        if (currentUser) {
+            navigate('/account');
+        }
+    }, [currentUser, navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
         try {
-            // Use Firebase to sign in the user
             await signInWithEmailAndPassword(auth, email, password);
-            
-            // On successful login, Firebase's onAuthStateChanged listener in App.jsx
-            // will update the user state. We can then navigate to the account page.
-            navigate('/account');
-
         } catch (err) {
-            // Display user-friendly error messages
-            if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                setError('Invalid email or password.');
+            console.error("Firebase login error:", err.code, err.message);
+            if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                setError('Invalid email or password. Please try again.');
+            } else if (err.code === 'auth/invalid-email') {
+                setError('Please enter a valid email address.');
             } else {
-                setError('Failed to log in. Please try again.');
+                setError('An unexpected error occurred. Please try again later.');
             }
-            console.error("Firebase login error:", err);
         } finally {
             setLoading(false);
         }
