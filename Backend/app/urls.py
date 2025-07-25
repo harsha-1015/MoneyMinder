@@ -3,10 +3,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('api/email-otp',views.get_email,name='email-otp'),
-    path('api/basic-info',views.get_basicInfo,name='basic-info'),
-    path('api/check-email',views.check_email_exists,name='check-email'),
-    path('api/login-verification',views.send_LoginVerfication,name='login-verification'),
     path('api/get-user-details',views.get_user_details,name='get-user-details'),
     path('google/connect/', views.connect_google, name='connect_google'),
     path('google/callback/', views.google_callback, name='google_callback'),

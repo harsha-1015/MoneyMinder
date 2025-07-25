@@ -60,61 +60,6 @@ def get_email_body(payload):
         if data:
             return base64.urlsafe_b64decode(data).decode('utf-8', errors='ignore')
     return body
-# -------------------------------------------
-
-
-#views
-@csrf_exempt
-def get_email(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        email = data.get('email')
-        otp = random.randint(100000, 999999)
-
-        subject = "Money-Minder OTP for login"
-        message = f"Your OTP forMoney-minder is: {otp}\nDo not share it with anyone."
-        from_email = "gharshavardhanreddy115@gmail.com"
-
-        try:
-            send_mail(subject, message, from_email, [email])
-            return JsonResponse({"status": "sent", "otp": otp})
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)})
-
-    return JsonResponse({"status": "error", "message": "POST only"})
-        
-@csrf_exempt
-def check_email_exists(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        email = data.get('email')
-        if BasicInfo.objects.filter(email=email).exists():
-            return JsonResponse({'exists': True})
-        else:
-            return JsonResponse({'exists': False})
-
-
-@csrf_exempt
-def send_LoginVerfication(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            email = data.get('email')
-            password = data.get('password')
-
-            if not email or not password:
-                return JsonResponse({'status': 'error', 'message': 'Email and password are required'}, status=400)
-
-            user = BasicInfo.objects.get(email=email, password=password)
-            return JsonResponse({'status': 'success', 'message': 'Login successful'})
-
-        except BasicInfo.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Invalid email or password'}, status=401)
-
-        except json.JSONDecodeError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
 @csrf_exempt
@@ -136,25 +81,6 @@ def create_profile(request):
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=400)
     return JsonResponse({"error": "Only POST requests are allowed."}, status=405)
-
-@csrf_exempt
-def get_basicInfo(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        try:
-            BasicInfo.objects.create(
-                full_name=data.get('full_name'),
-                email=data.get('email'),  
-                occupation=data.get('occupation'),
-                salary=int(data.get('salary')),
-                marital_status=data.get('marital_status'),
-                gender=data.get('gender'),
-                password=data.get('password'),
-            )
-            return JsonResponse({"status": "success"})
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)})
-    return JsonResponse({"error": "Only POST allowed"})
 
 @csrf_exempt
 def get_user_details(request):
