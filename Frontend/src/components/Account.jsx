@@ -1,158 +1,77 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext'; // FIX: Use the custom hook
+import axios from 'axios';
 
-function Account() {
-  const navigate = useNavigate();
+export default function Account() {
+  const { currentUser } = useAuth(); // FIX: Use the custom hook
+  // ... rest of the component is the same
+  const [userData, setUserData] = useState(null);
+  const [error, setError] = useState(null);
+  const [syncMessage, setSyncMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const [user, setUser] = useState(null);
-  const [error, setError] = useState("");
-
-  
-  const [syncMessage, setSyncMessage] = useState("");
-  const [isSyncing, setIsSyncing] = useState(false);
-  
+  const handleSync = async () => {
+    if (!currentUser) return;
+    setSyncMessage('Syncing... Please wait.');
+    try {
+      await axios.post('http://localhost:8000/api/sync-emails/', { uid: currentUser.uid });
+      setSyncMessage('Emails synced successfully!');
+    } catch (err) {
+      setSyncMessage('Failed to sync emails.');
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
-  const email = localStorage.getItem("email");
-  const login = localStorage.getItem("Login");
-
-  // Avoid infinite navigation loop
-  if (!email || login !== "success") {
-    // Only navigate if already not on login page
-    if (window.location.pathname !== "/login") {
-      navigate("/login", { replace: true });
-    }
-    return;
-  }
-
-  const fetchUserDetails = async () => {
-    try {
-      const res = await fetch(
-        `http://127.0.0.1:8000/app/api/get-user-details?email=${encodeURIComponent(email)}`
-      );
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Fetch failed");
-      setUser(data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  fetchUserDetails();
-}, [navigate]);
-
-  /* Logout handler */
-  const handleLogout = () => {
-    localStorage.removeItem("Login");
-    localStorage.removeItem("email");
-    window.dispatchEvent(new Event("storage")); // sync header
-    navigate("/login");
-  };
-
-  // --- ADDED FOR SYNC BUTTON ---
-  const handleSyncEmails = async () => {
-    setIsSyncing(true);
-    setSyncMessage("Syncing in progress, this may take a moment...");
-    const email = localStorage.getItem("email");
-
-    try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/app/api/manual-sync/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          // Send email in the body so the backend knows which user to sync
-          body: JSON.stringify({ email: email }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Sync failed. Please try again.");
+    const fetchUserData = async () => {
+      if (!currentUser) {
+        setLoading(false);
+        return;
       }
+      setLoading(true);
+      try {
+        const response = await axios.post('http://localhost:8000/api/get-user/', {
+          uid: currentUser.uid,
+        });
+        setUserData(response.data);
+      } catch (err) {
+        setError('Failed to fetch user data.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setSyncMessage(data.message);
-    } catch (err) {
-      setSyncMessage(err.message);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-  // -----------------------------
+    fetchUserData();
+  }, [currentUser?.uid]);
+
+  if (loading) {
+    return <div className="text-center py-10">Loading account details...</div>;
+  }
 
   if (error) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <p className="text-red-600">{error}</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <p>Loading…</p>
-      </div>
-    );
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 rounded-2xl shadow-lg bg-white">
-      <h2 className="text-2xl font-semibold mb-4 text-center">
-        Account Details
-      </h2>
-
-      <div className="space-y-2">
-        <p>
-          <strong>Full Name:</strong> {user.full_name}
-        </p>
-        <p>
-          <strong>Email:</strong> {user.email}
-        </p>
-        <p>
-          <strong>Gender:</strong> {user.gender}
-        </p>
-        <p>
-          <strong>Occupation:</strong> {user.occupation}
-        </p>
-        <p>
-          <strong>Salary:</strong> ₹{user.salary}
-        </p>
-        <p>
-          <strong>Marital Status:</strong> {user.marital_status}
-        </p>
-      </div>
-
-      {/* --- ADDED SYNC BUTTON AND MESSAGE SECTION --- */}
-      <div className="mt-6 border-t pt-6">
-        <button
-          onClick={handleSyncEmails}
-          disabled={isSyncing}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg disabled:bg-blue-300 disabled:cursor-not-allowed"
-        >
-          {isSyncing ? "Syncing..." : "Sync Emails Now"}
-        </button>
-        {syncMessage && (
-          <p className="mt-4 text-center text-sm text-gray-700">
-            {syncMessage}
-          </p>
-        )}
-      </div>
-      {/* ------------------------------------------- */}
-
-      <button
-        type="button"
-        onClick={handleLogout}
-        className="mt-6 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg"
-      >
-        LOGOUT
-      </button>
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Account Information</h1>
+      {userData ? (
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <p className="mb-2"><strong>Full Name:</strong> {userData.full_name}</p>
+          <p className="mb-2"><strong>Email:</strong> {userData.email}</p>
+          <p className="mb-4"><strong>Date of Birth:</strong> {userData.date_of_birth}</p>
+          <button
+            onClick={handleSync}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Sync Emails Now
+          </button>
+          {syncMessage && <p className="mt-4 text-green-500">{syncMessage}</p>}
+        </div>
+      ) : (
+        <p>No user data found.</p>
+      )}
     </div>
   );
 }
-
-export default Account;

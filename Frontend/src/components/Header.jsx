@@ -1,18 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // Import the useAuth hook
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase";
 
 function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem("Login") === "success"
-  );
+  const { currentUser } = useAuth(); // Use the context to get the user
+  const navigate = useNavigate();
 
-  /* Listen for login/logout in other tabs or components */
-  useEffect(() => {
-    const syncLogin = () =>
-      setIsLoggedIn(localStorage.getItem("Login") === "success");
-    window.addEventListener("storage", syncLogin);
-    return () => window.removeEventListener("storage", syncLogin);
-  }, []);
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // No need to manually set state, the context will update automatically
+      navigate("/login"); // Redirect to login after logout
+    } catch (error) {
+      console.error("Logout Error:", error);
+    }
+  };
 
   return (
     <header className="bg-blue-900 text-white shadow-md">
@@ -22,15 +26,22 @@ function Header() {
         </h1>
 
         <nav>
-          <ul className="flex gap-6 text-sm md:text-base font-medium">
-            <li><Link to="/"          className="hover:text-yellow-400 transition">HOME</Link></li>
+          <ul className="flex gap-6 text-sm md:text-base font-medium items-center">
+            <li><Link to="/" className="hover:text-yellow-400 transition">HOME</Link></li>
             <li><Link to="/analysis" className="hover:text-yellow-400 transition">ANALYSIS</Link></li>
-            <li><Link to="/contact"  className="hover:text-yellow-400 transition">CONTACT</Link></li>
+            <li><Link to="/contact" className="hover:text-yellow-400 transition">CONTACT</Link></li>
 
-            {isLoggedIn ? (
-              <li><Link to="/account" className="hover:text-yellow-400 transition">ACCOUNT</Link></li>
+            {currentUser ? (
+              <>
+                <li><Link to="/account" className="hover:text-yellow-400 transition">ACCOUNT</Link></li>
+                <li>
+                  <button onClick={handleLogout} className="hover:text-yellow-400 transition font-medium">
+                    LOGOUT
+                  </button>
+                </li>
+              </>
             ) : (
-              <li><Link to="/login"   className="hover:text-yellow-400 transition">LOGIN</Link></li>
+              <li><Link to="/login" className="hover:text-yellow-400 transition">LOGIN</Link></li>
             )}
           </ul>
         </nav>
