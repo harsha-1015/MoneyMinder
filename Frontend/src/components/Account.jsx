@@ -14,7 +14,7 @@ export default function Account() {
     if (!currentUser) return;
     setSyncMessage('Syncing... Please wait.');
     try {
-      await axios.post('http://localhost:8000/api/manual-sync/', { uid: currentUser.uid });
+      await axios.post('http://127.0.0.1:8000/app/api/sync-emails', { uid: currentUser.uid });
       setSyncMessage('Emails synced successfully!');
     } catch (err) {
       setSyncMessage('Failed to sync emails.');
@@ -30,7 +30,7 @@ export default function Account() {
       }
       setLoading(true);
       try {
-        const response = await axios.post('http://localhost:8000/api/get-user/', {
+        const response = await axios.post('http://localhost:8000/app/api/get-user', {
           uid: currentUser.uid,
         });
         setUserData(response.data);

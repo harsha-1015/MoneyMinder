@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // Use our robust auth hook
 import {
   TrendingUp, Shield, Zap, PieChart, Smartphone, Users,
   ArrowRight, DollarSign, BarChart3, Wallet
@@ -7,23 +8,16 @@ import {
 
 function Home() {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem("Login") === "success"
-  );
-
-  useEffect(() => {
-    const sync = () =>
-      setIsLoggedIn(localStorage.getItem("Login") === "success");
-    window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
-  }, []);
+  const { currentUser } = useAuth(); // Check for user from the context
 
   const handleConnect = () => {
+    // Correct backend URL for connecting to Google
     window.location.href = "http://localhost:8000/app/google/connect/";
   };
 
   const handleGetStarted = () => {
-    navigate("/analysis");
+    // Navigate new users to the registration page
+    navigate("/register");
   };
 
   const features = [
@@ -102,11 +96,11 @@ function Home() {
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <button
-              onClick={isLoggedIn ? handleConnect : handleGetStarted}
+              onClick={currentUser ? handleConnect : handleGetStarted}
               className="group relative px-8 py-4 bg-gradient-to-r from-blue-800 to-emerald-500 hover:from-blue-900 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-blue-800/25 font-inter"
             >
               <span className="flex items-center">
-                {isLoggedIn ? "Connect to Google Account" : "Get Started Free"}
+                {currentUser ? "Connect to Google Account" : "Get Started Free"}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </span>
             </button>
@@ -172,10 +166,10 @@ function Home() {
               Join thousands of users who’ve already transformed their financial lives with Money-Minder.
             </p>
             <button
-              onClick={isLoggedIn ? handleConnect : handleGetStarted}
+              onClick={currentUser ? handleConnect : handleGetStarted}
               className="group inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-800 to-emerald-500 hover:from-blue-900 hover:to-emerald-600 text-white font-semibold rounded-xl transition duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-blue-800/25 font-inter"
             >
-              {isLoggedIn ? "Connect Your Account" : "Start Your Free Journey"}
+              {currentUser ? "Connect Your Account" : "Start Your Free Journey"}
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
