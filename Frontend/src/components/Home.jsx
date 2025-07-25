@@ -8,7 +8,7 @@ import {
 
 function Home() {
   const navigate = useNavigate();
-  const { currentUser } = useAuth(); // Check for user from the context
+  const { currentUser, backendUserData } = useAuth(); // Check for user from the context
 
   const handleConnect = () => {
     // Correct backend URL for connecting to Google
@@ -19,6 +19,9 @@ function Home() {
     // Navigate new users to the registration page
     navigate("/register");
   };
+
+  // Check if user has connected Google account
+  const isGoogleConnected = currentUser && backendUserData?.google_access_token;
 
   const features = [
     {
@@ -95,15 +98,40 @@ function Home() {
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <button
-              onClick={currentUser ? handleConnect : handleGetStarted}
-              className="group relative px-8 py-4 bg-gradient-to-r from-blue-800 to-emerald-500 hover:from-blue-900 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-blue-800/25 font-inter"
-            >
-              <span className="flex items-center">
-                {currentUser ? "Connect to Google Account" : "Get Started Free"}
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </button>
+            {!currentUser ? (
+              <button
+                onClick={handleGetStarted}
+                className="group relative px-8 py-4 bg-gradient-to-r from-blue-800 to-emerald-500 hover:from-blue-900 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-blue-800/25 font-inter"
+              >
+                <span className="flex items-center">
+                  Get Started Free
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </button>
+            ) : isGoogleConnected ? (
+              <div className="flex flex-col items-center space-y-2">
+                <button
+                  onClick={() => navigate('/analysis')}
+                  className="group relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-blue-800 hover:from-emerald-600 hover:to-blue-900 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/25 font-inter"
+                >
+                  <span className="flex items-center">
+                    View Your Analysis
+                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+                <p className="text-sm text-emerald-600 font-medium">✓ Google Account Connected</p>
+              </div>
+            ) : (
+              <button
+                onClick={handleConnect}
+                className="group relative px-8 py-4 bg-gradient-to-r from-blue-800 to-emerald-500 hover:from-blue-900 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-blue-800/25 font-inter"
+              >
+                <span className="flex items-center">
+                  Connect to Google Account
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </button>
+            )}
 
             <button className="px-8 py-4 border border-gray-300 text-gray-700 hover:text-gray-900 hover:border-gray-400 hover:bg-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg backdrop-blur-sm font-inter">
               Watch Demo
@@ -166,10 +194,10 @@ function Home() {
               Join thousands of users who’ve already transformed their financial lives with Money-Minder.
             </p>
             <button
-              onClick={currentUser ? handleConnect : handleGetStarted}
+              onClick={!currentUser ? handleGetStarted : isGoogleConnected ? () => navigate('/analysis') : handleConnect}
               className="group inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-800 to-emerald-500 hover:from-blue-900 hover:to-emerald-600 text-white font-semibold rounded-xl transition duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-blue-800/25 font-inter"
             >
-              {currentUser ? "Connect Your Account" : "Start Your Free Journey"}
+              {!currentUser ? "Start Your Free Journey" : isGoogleConnected ? "View Your Analysis" : "Connect Your Account"}
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

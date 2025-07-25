@@ -91,7 +91,8 @@ def get_user(request):
             'gender': user.gender,
             'occupation': user.occupation,
             'salary': user.salary,
-            'marital_status': user.marital_status
+            'marital_status': user.marital_status,
+            'google_access_token': user.google_access_token
         })
     except BasicInfo.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'User not found.'}, status=404)
