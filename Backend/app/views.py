@@ -240,7 +240,6 @@ def google_callback(request):
         scopes=["https://www.googleapis.com/auth/gmail.readonly"],
         redirect_uri=settings.GOOGLE_REDIRECT_URI,
     )
-    # ---------------------------------------------------------------------
 
     try:
         flow.fetch_token(code=code)
