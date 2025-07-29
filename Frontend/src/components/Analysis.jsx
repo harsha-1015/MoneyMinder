@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 // --- Chart Colors ---
@@ -11,15 +12,16 @@ const Analysis = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // --- NEW: State for month/year selection ---
+    
     const [selectedDate, setSelectedDate] = useState({
-        month: new Date().getMonth() + 1, // Default to current month
-        year: new Date().getFullYear(),   // Default to current year
+        month: new Date().getMonth() + 1, 
+        year: new Date().getFullYear(),  
     });
 
+    const { currentUser } = useAuth();
+
     useEffect(() => {
-        const email = localStorage.getItem("email");
-        if (!email) {
+        if (!currentUser) {
             navigate("/login");
             return;
         }
@@ -27,12 +29,17 @@ const Analysis = () => {
         const fetchAnalysis = async () => {
             try {
                 setLoading(true);
-                setError(''); // Clear previous errors
+                setError(''); 
+                if (!currentUser?.uid) {
+                    throw new Error('User not authenticated');
+                }
+                
                 const response = await fetch('http://127.0.0.1:8000/app/api/get-analysis/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        email: email,
+                        uid: currentUser.uid,
+                        email: currentUser.email,
                         month: selectedDate.month,
                         year: selectedDate.year,
                     }),

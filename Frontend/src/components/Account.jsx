@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function Account() {
     const { currentUser } = useAuth();
@@ -11,15 +11,51 @@ export default function Account() {
     const [syncMessage, setSyncMessage] = useState('');
     const [loading, setLoading] = useState(true);
 
+    const handleConnectGoogle = () => {
+        if (!currentUser?.uid) return;
+        window.location.href = `http://localhost:8000/app/google/connect/?uid=${currentUser.uid}`;
+    };
+
     const handleSync = async () => {
         if (!currentUser) return;
-        setSyncMessage('Syncing... Please wait.');
+        
+        // Call manual sync endpoint
+        setSyncMessage('Syncing emails... This may take a moment.');
         try {
-            const response = await axios.post('http://127.0.0.1:8000/app/api/sync-emails', { uid: currentUser.uid });
-            setSyncMessage(response.data.message || 'Emails synced successfully!');
+            const response = await axios.post('http://127.0.0.1:8000/app/api/manual-sync/', { 
+                uid: currentUser.uid 
+            }, {
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (response.data.status === 'success') {
+                setSyncMessage(response.data.message);
+                // Refresh user data to update last_sync time and connection status
+                await fetchUserData();
+            } else {
+                setSyncMessage(response.data.message || 'Sync completed with issues.');
+            }
         } catch (err) {
-            setSyncMessage(err.response?.data?.message || 'Failed to sync emails.');
-            console.error(err);
+            const errorMsg = err.response?.data?.message || 'Failed to sync emails. Please try again.';
+            setSyncMessage(`Error: ${errorMsg}`);
+            console.error('Sync error:', err);
+        }
+    };
+
+    const fetchUserData = async () => {
+        if (!currentUser) return;
+        setLoading(true);
+        try {
+            const response = await axios.post('http://localhost:8000/app/api/get-user', {
+                uid: currentUser.uid,
+            });
+            setUserData(response.data);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching user data:', err);
+            setError('Failed to fetch user data. Please refresh the page.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -28,22 +64,6 @@ export default function Account() {
             navigate('/login');
             return;
         }
-
-        const fetchUserData = async () => {
-            setLoading(true);
-            try {
-                const response = await axios.post('http://localhost:8000/app/api/get-user', {
-                    uid: currentUser.uid,
-                });
-                setUserData(response.data);
-            } catch (err) {
-                setError('Failed to fetch user data.');
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchUserData();
     }, [currentUser, navigate]);
 
@@ -66,13 +86,54 @@ export default function Account() {
                     <p className="mb-2"><strong>Occupation:</strong> {userData.occupation}</p>
                     <p className="mb-2"><strong>Salary:</strong> ₹{parseFloat(userData.salary).toLocaleString()}</p>
                     <p className="mb-4"><strong>Marital Status:</strong> {userData.marital_status}</p>
-                    <button
-                        onClick={handleSync}
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Sync Emails Now
-                    </button>
-                    {syncMessage && <p className="mt-4 text-green-500">{syncMessage}</p>}
+                    <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <div className={`w-3 h-3 rounded-full mr-2 ${userData?.google_access_token ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                <span className="font-medium">
+                                    Google {userData?.google_access_token ? 'Connected' : 'Not Connected'}
+                                </span>
+                            </div>
+                            
+                            {userData?.google_access_token ? (
+                                <button
+                                    onClick={handleSync}
+                                    className="font-bold py-2 px-4 rounded text-sm bg-blue-500 hover:bg-blue-600 text-white"
+                                >
+                                    Sync Emails Now
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleConnectGoogle}
+                                    className="font-bold py-2 px-4 rounded text-sm bg-green-500 hover:bg-green-600 text-white"
+                                >
+                                    Connect Email
+                                </button>
+                            )}
+                        </div>
+                        
+                        {userData?.google_access_token && (
+                            <div className="mt-2 text-sm text-gray-600">
+                                <p>
+                                    <span className="font-medium">Last sync:</span>{' '}
+                                    {userData.last_email_sync 
+                                        ? new Date(userData.last_email_sync).toLocaleString() 
+                                        : 'Never synced'}
+                                </p>
+                                {syncMessage && (
+                                    <p className={`mt-1 ${syncMessage.includes('Error:') ? 'text-red-500' : 'text-green-600'}`}>
+                                        {syncMessage}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        
+                        {!userData?.google_access_token && (
+                            <p className="text-sm text-gray-500 mt-2">
+                                Connect your Google account to sync email transactions automatically.
+                            </p>
+                        )}
+                    </div>
                 </div>
             ) : (
                 <p>No user data found.</p>

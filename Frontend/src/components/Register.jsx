@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -18,6 +18,14 @@ const Register = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        // Check for ?error=notfound in the URL
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('error') === 'notfound') {
+            navigate('/'); // Redirect to home if error=notfound
+        }
+    }, [navigate]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
